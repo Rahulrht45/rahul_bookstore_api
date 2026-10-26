@@ -77,7 +77,7 @@ const getAllBooks = (req, res) => {
       LEFT JOIN users ON books.user_id = users.id 
       LEFT JOIN reviews ON books.Id = reviews.book_id 
       ${whereClause}
-      GROUP BY books.Id
+      GROUP BY books.Id, users.username
       ${orderClause} 
       LIMIT ? OFFSET ?
     `;
@@ -118,7 +118,7 @@ const getBookById = (req, res) => {
     LEFT JOIN users ON books.user_id = users.id 
     LEFT JOIN reviews ON books.Id = reviews.book_id
     WHERE books.Id = ?
-    GROUP BY books.Id
+    GROUP BY books.Id, users.username
   `;
 
   db.query(sql, [bookId], (err, results) => {
