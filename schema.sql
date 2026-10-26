@@ -3,6 +3,9 @@
 -- TiDB Cloud / Aiven / Local MySQL এ চালানোর জন্য সম্পূর্ণ প্রস্তুত
 -- ============================================================
 
+-- ০. TiDB Cloud এর ডিফল্ট ডাটাবেজ নির্বাচন
+USE test;
+
 -- ১. ইউজার টেবিল (Users Table)
 CREATE TABLE IF NOT EXISTS users (
   id INT AUTO_INCREMENT PRIMARY KEY,

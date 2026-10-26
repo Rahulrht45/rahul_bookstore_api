@@ -5,7 +5,8 @@
   "description": "A beginner Express and MySQL API",
   "main": "my-first-api.js",
   "scripts": {
-    "start": "node my-first-api.js",
+    "start": "node books-api.js",
+    "donor": "node my-first-api.js",
     "books": "node books-api.js"
   },
   "dependencies": {
