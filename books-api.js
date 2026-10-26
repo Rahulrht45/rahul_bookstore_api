@@ -2,6 +2,7 @@
 // প্রফেশনাল মডুলার আর্কিটেকচার অনুযায়ী কোড সাজানো হয়েছে।
 
 require('dotenv').config(); // গোপন এনভায়রনমেন্ট ভ্যারিয়েবল লোড করা
+const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -17,7 +18,7 @@ app.use(cors());                                  // নিরাপদ ক্�
 app.use(express.json());
 
 // ৩. আপলোড করা ছবি ব্রাউজারে সরাসরি দেখার সুবিধা
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ৪. এপিআই রেট লিমিটিং (DDoS ও স্প্যাম প্রতিরোধ)
 app.use('/api', globalLimiter);
@@ -37,7 +38,12 @@ app.use('/api/profile', profileRoutes);   // /api/profile এর ড্যাশ
 app.use('/api/orders', orderRoutes);     // /api/orders এর শপিং কার্ট চেকআউট ও হিস্টোরি
 
 // ফ্রন্টএন্ড ওয়েবসাইট ফাইলগুলো পরিবেশন করা (Static Frontend)
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// হোমপেজে সরাসরি ফ্রন্টএন্ড HTML লোড করা
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // এবাউট রুট
 app.get('/aboutme', (req, res) => {
