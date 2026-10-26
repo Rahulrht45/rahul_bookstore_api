@@ -44,8 +44,12 @@ app.get('/aboutme', (req, res) => {
   res.send('I am rahul, a full-stack developer! This is my books API.');
 });
 
-// সার্ভার চালু করা
+// সার্ভার চালু করা (Local ও Cloud সার্ভার উভয়ের জন্য প্রস্তুত)
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 Books API Server started: http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Books API Server started: http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
