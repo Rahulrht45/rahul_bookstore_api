@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="রাহুলের প্রিমিয়াম বুকস্টোর - বই খুঁজুন, ফিল্টার করুন এবং সহজেই বই পরিচালনা করুন">
+  <title>📚 রাহুলের বুকস্টোর — Books API ড্যাশবোর্ড</title>
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- নেভিগেশন বার (Header) -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <span class="brand-icon">📚</span>
+        <div class="brand-text">
+          <h1>রাহুল বুকস্টোর</h1>
+          <span class="badge-api">REST API Client</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button id="themeToggleBtn" class="btn btn-outline theme-btn" onclick="toggleTheme()" title="চোখের জন্য আরামদায়ক থিম পরিবর্তন করুন">
+          <span id="themeIcon">☀️</span> <span id="themeText">লাইট মোড</span>
+        </button>
+        <button id="wishlistNavBtn" class="btn btn-outline" onclick="toggleWishlistView()" title="আমার পছন্দের বই">
+          <span>❤️</span> উইশলিস্ট <span id="wishlistBadge" class="wishlist-badge" style="display: none;">0</span>
+        </button>
+        <button id="cartNavBtn" class="btn btn-outline cart-nav-btn" onclick="openCartModal()" title="শপিং কার্ট">
+          <span>🛒</span> কার্ট <span id="cartBadge" class="cart-badge" style="display: none;">0</span>
+        </button>
+        <button id="addBookBtn" class="btn btn-primary" onclick="openAddBookModal()">
+          <span>➕</span> নতুন বই যোগ করুন
+        </button>
+        <div id="authStatus" class="auth-status">
+          <!-- জাভাস্ক্রিপ্ট দিয়ে লগইন/ইউজার প্রোফাইল বসবে -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- মূল কন্টেন্ট (Main) -->
+  <main class="container">
+    <!-- কন্ট্রোল প্যানেল: সার্চ, দামের ফিল্টার ও পেজিনেশন লিমিট -->
+    <section class="control-panel glass-card" aria-label="ফিল্টার ও সার্চ অপশন">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="বইয়ের নাম বা লেখকের নাম দিয়ে সার্চ করুন..." 
+          autocomplete="off"
+        >
+        <button id="clearSearchBtn" class="clear-btn" title="মুছে ফেলুন" style="display: none;">✕</button>
+      </div>
+
+      <div class="filter-group">
+        <div class="price-inputs">
+          <label for="minPrice">দাম (৳):</label>
+          <input type="number" id="minPrice" placeholder="সর্বনিম্ন" min="0">
+          <span class="dash">-</span>
+          <input type="number" id="maxPrice" placeholder="সর্বোচ্চ" min="0">
+        </div>
+
+        <div class="limit-selector">
+          <label for="limitSelect">প্রতি পেজে:</label>
+          <select id="limitSelect">
+            <option value="3">৩টি</option>
+            <option value="6" selected>৬টি</option>
+            <option value="9">৯টি</option>
+            <option value="12">১২টি</option>
+          </select>
+        </div>
+
+        <div class="sort-selector">
+          <label for="sortSelect">সাজান:</label>
+          <select id="sortSelect">
+            <option value="newest" selected>🆕 নতুন বই আগে</option>
+            <option value="rating_desc">⭐ সর্বোচ্চ রেটিং</option>
+            <option value="price_asc">📉 দাম: কম থেকে বেশি</option>
+            <option value="price_desc">📈 দাম: বেশি থেকে কম</option>
+            <option value="title_asc">🔤 নাম: A থেকে Z</option>
+          </select>
+        </div>
+
+        <button id="applyFilterBtn" class="btn btn-secondary">
+          ফিল্টার করুন
+        </button>
+        <button id="resetFilterBtn" class="btn btn-outline" title="রিসেট করুন">
+          🔄 রিসেট
+        </button>
+      </div>
+    </section>
+
+    <!-- স্ট্যাটাস বার: মোট বই সংখ্যা ও পেজ তথ্য -->
+    <div class="meta-bar">
+      <div id="resultInfo" class="result-info">
+        বই লোড হচ্ছে...
+      </div>
+      <div class="active-filters" id="activeFilters">
+        <!-- কোন কোন ফিল্টার চালু আছে তা ব্যাজে দেখাবে -->
+      </div>
+    </div>
+
+    <!-- বইয়ের তালিকা গ্রিড -->
+    <section id="booksGrid" class="books-grid" aria-live="polite">
+      <!-- জাভাস্ক্রিপ্ট দিয়ে বইয়ের কার্ডগুলো তৈরি হবে -->
+    </section>
+
+    <!-- পেজিনেশন নেভিগেশন -->
+    <nav class="pagination-nav" aria-label="বইয়ের পেজ নেভিগেশন">
+      <button id="prevPageBtn" class="btn btn-pagination" disabled>
+        ← আগের পেজ
+      </button>
+      <div id="pageIndicator" class="page-indicator">
+        পেজ ১ / ১
+      </div>
+      <button id="nextPageBtn" class="btn btn-pagination" disabled>
+        পরের পেজ →
+      </button>
+    </nav>
+  </main>
+
+  <!-- ১. লগইন / রেজিস্ট্রেশন মডাল -->
+  <div id="authModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glass-card">
+      <button class="modal-close" onclick="closeAuthModal()">✕</button>
+      
+      <div class="tab-buttons">
+        <button id="tabLoginBtn" class="tab-btn active" onclick="switchAuthTab('login')">লগইন</button>
+        <button id="tabRegisterBtn" class="tab-btn" onclick="switchAuthTab('register')">নতুন অ্যাকাউন্ট</button>
+      </div>
+
+      <!-- লগইন ফর্ম -->
+      <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+        <h3>অ্যাকাউন্টে লগইন করুন</h3>
+        <p class="form-subtext">JWT টোকেন পাওয়ার জন্য লগইন করুন</p>
+        <div class="form-group">
+          <label for="loginUsername">ব্যবহারকারীর নাম (Username)</label>
+          <input type="text" id="loginUsername" required placeholder="যেমন: rahul">
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">পাসওয়ার্ড (Password)</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          লগইন করুন 🚀
+        </button>
+      </form>
+
+      <!-- রেজিস্ট্রেশন ফর্ম -->
+      <form id="registerForm" class="auth-form" style="display: none;" onsubmit="handleRegister(event)">
+        <h3>নতুন অ্যাকাউন্ট খুলুন</h3>
+        <p class="form-subtext">পাসওয়ার্ড স্বয়ংক্রিয়ভাবে bcrypt দিয়ে হ্যাশ হবে</p>
+        <div class="form-group">
+          <label for="regUsername">ব্যবহারকারীর নাম (Username)</label>
+          <input type="text" id="regUsername" required placeholder="ইউনিক নাম দিন">
+        </div>
+        <div class="form-group">
+          <label for="regPassword">পাসওয়ার্ড (Password)</label>
+          <input type="password" id="regPassword" required placeholder="শক্তিশালী পাসওয়ার্ড দিন">
+        </div>
+        <button type="submit" class="btn btn-secondary btn-block">
+          অ্যাকাউন্ট তৈরি করুন ✨
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ২. নতুন বই যোগ করার মডাল -->
+  <div id="addBookModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glass-card">
+      <button class="modal-close" onclick="closeAddBookModal()">✕</button>
+      <h3>নতুন বই যোগ করুন 📖</h3>
+      <p class="form-subtext">টোকেন দিয়ে রুট সুরক্ষিত (Protected Route)</p>
+
+      <form id="addBookForm" onsubmit="handleAddBook(event)">
+        <div class="form-group">
+          <label for="newBookTitle">বইয়ের নাম (Book Title) *</label>
+          <input type="text" id="newBookTitle" required placeholder="যেমন: Harry Potter">
+        </div>
+        <div class="form-group">
+          <label for="newBookAuthor">লেখকের নাম (Author) *</label>
+          <input type="text" id="newBookAuthor" required placeholder="যেমন: J.K. Rowling">
+        </div>
+        <div class="form-group">
+          <label for="newBookPrice">বইয়ের দাম (Price ৳) *</label>
+          <input type="number" id="newBookPrice" required placeholder="যেমন: 450" min="0">
+        </div>
+        <div class="form-group">
+          <label for="newBookCover">বইয়ের কভার ছবি (Cover Image)</label>
+          <input type="file" id="newBookCover" accept="image/*" onchange="previewCoverImage(event)">
+          <div id="imagePreviewContainer" class="image-preview" style="display: none;">
+            <img id="imagePreview" src="" alt="প্রিভিউ">
+          </div>
+        </div>
+        <button type="submit" id="submitBookBtn" class="btn btn-primary btn-block">
+          বই সেভ করুন 💾
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ৩. বই এডিট করার মডাল -->
+  <div id="editBookModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glass-card">
+      <button class="modal-close" onclick="closeEditBookModal()">✕</button>
+      <h3>বইয়ের তথ্য এডিট করুন ✏️</h3>
+      <p class="form-subtext">মালিক অথবা অ্যাডমিন পারমিশন প্রয়োজন</p>
+
+      <form id="editBookForm" onsubmit="handleEditBook(event)">
+        <input type="hidden" id="editBookId">
+        <div class="form-group">
+          <label for="editBookTitle">বইয়ের নাম (Book Title) *</label>
+          <input type="text" id="editBookTitle" required>
+        </div>
+        <div class="form-group">
+          <label for="editBookAuthor">লেখকের নাম (Author) *</label>
+          <input type="text" id="editBookAuthor" required>
+        </div>
+        <div class="form-group">
+          <label for="editBookPrice">বইয়ের দাম (Price ৳) *</label>
+          <input type="number" id="editBookPrice" required min="0">
+        </div>
+        <div class="form-group">
+          <label for="editBookCover">নতুন কভার ছবি (ঐচ্ছিক)</label>
+          <input type="file" id="editBookCover" accept="image/*" onchange="previewEditCoverImage(event)">
+          <div id="editImagePreviewContainer" class="image-preview" style="display: none;">
+            <img id="editImagePreview" src="" alt="প্রিভিউ">
+          </div>
+        </div>
+        <button type="submit" id="submitEditBookBtn" class="btn btn-primary btn-block">
+          পরিবর্তন সংরক্ষণ করুন 💾
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ৪. বইয়ের রিভিউ ও রেটিং মডাল -->
+  <div id="reviewsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glass-card modal-large">
+      <button class="modal-close" onclick="closeReviewsModal()">✕</button>
+      <div class="reviews-modal-header">
+        <h3 id="reviewModalBookTitle">বইয়ের রিভিউ 💬</h3>
+        <p class="form-subtext" id="reviewModalSubtext">পাঠকদের মতামত ও স্টার রেটিং</p>
+      </div>
+
+      <!-- রিভিউ তালিকা -->
+      <div id="reviewsList" class="reviews-list-container">
+        <!-- জাভাস্ক্রিপ্ট দিয়ে রিভিউ কার্ড বসবে -->
+      </div>
+
+      <!-- নতুন রিভিউ দেওয়ার ফর্ম -->
+      <div id="reviewFormSection" class="review-form-section">
+        <!-- জাভাস্ক্রিপ্ট দিয়ে ফর্ম অথবা লগইন বার্তা বসবে -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ৫. ইউজার প্রোফাইল ও পাসওয়ার্ড পরিবর্তন মডাল -->
+  <div id="profileModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glass-card modal-large">
+      <button class="modal-close" onclick="closeProfileModal()">✕</button>
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 3rem; margin-bottom: 6px;">👤</div>
+        <h3 id="profileUsername" style="font-size: 1.4rem;">ইউজার প্রোফাইল</h3>
+        <span id="profileRoleBadge" class="role-tag" style="margin-top: 4px; display: inline-block;">user</span>
+        <p id="profileJoinedDate" class="form-subtext" style="margin-top: 6px;">যোগদানের তারিখ: ...</p>
+      </div>
+
+      <!-- স্ট্যাটাস ড্যাশবোর্ড কার্ড -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 24px;">
+        <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border-color);">
+          <div style="font-size: 1.3rem;">📚</div>
+          <div id="statUploaded" style="font-size: 1.2rem; font-weight: 700; color: var(--primary);">0</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim);">আপলোড বই</div>
+        </div>
+        <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border-color);">
+          <div style="font-size: 1.3rem;">💬</div>
+          <div id="statReviews" style="font-size: 1.2rem; font-weight: 700; color: #fbbf24;">0</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim);">দেওয়া রিভিউ</div>
+        </div>
+        <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border-color);">
+          <div style="font-size: 1.3rem;">❤️</div>
+          <div id="statWishlist" style="font-size: 1.2rem; font-weight: 700; color: #ef4444;">0</div>
+          <div style="font-size: 0.76rem; color: var(--text-dim);">পছন্দের বই</div>
+        </div>
+      </div>
+
+      <!-- পাসওয়ার্ড পরিবর্তন ফর্ম -->
+      <div style="border-top: 1px solid var(--border-color); padding-top: 18px;">
+        <h4 style="margin-bottom: 12px; font-size: 1rem;">পাসওয়ার্ড পরিবর্তন করুন 🔑</h4>
+        <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+          <div class="form-group">
+            <label for="currentPassword">বর্তমান পাসওয়ার্ড *</label>
+            <input type="password" id="currentPassword" required placeholder="বর্তমান পাসওয়ার্ড দিন">
+          </div>
+          <div class="form-group">
+            <label for="newPassword">নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর) *</label>
+            <input type="password" id="newPassword" required minlength="6" placeholder="নতুন পাসওয়ার্ড দিন">
+          </div>
+          <div class="form-group">
+            <label for="confirmNewPassword">নতুন পাসওয়ার্ড নিশ্চিত করুন *</label>
+            <input type="password" id="confirmNewPassword" required minlength="6" placeholder="আবার নতুন পাসওয়ার্ড দিন">
+          </div>
+          <button type="submit" id="submitPasswordBtn" class="btn btn-primary btn-block">
+            পাসওয়ার্ড আপডেট করুন 🔒
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ৬. শপিং কার্ট মডাল -->
+  <div id="cartModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glass-card modal-large">
+      <button class="modal-close" onclick="closeCartModal()">✕</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 1.25rem;">🛒 আপনার শপিং কার্ট</h3>
+        <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.76rem;" onclick="clearCart()">কার্ট খালি করুন</button>
+      </div>
+
+      <div id="cartItemsList" style="max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; padding-right: 4px;">
+        <!-- কার্ট আইটেমগুলো জাভাস্ক্রিপ্ট দিয়ে বসবে -->
+      </div>
+
+      <div id="cartSummary" style="border-top: 1px solid var(--border-color); padding-top: 14px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem;">
+          <span>মোট বইয়ের সংখ্যা:</span>
+          <strong id="cartTotalItems">০টি</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 1.2rem; color: var(--primary);">
+          <span>সর্বমোট মূল্য:</span>
+          <strong id="cartTotalAmount">৳ ০</strong>
+        </div>
+        <button id="checkoutBtn" class="btn btn-primary btn-block" onclick="handleCheckout()">
+          🛍️ অর্ডার সম্পন্ন করুন (ক্যাশ অন ডেলিভারি)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ৭. পূর্ববর্তী অর্ডার ইতিহাস মডাল -->
+  <div id="ordersModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content glass-card modal-large">
+      <button class="modal-close" onclick="closeOrdersModal()">✕</button>
+      <div style="margin-bottom: 16px;">
+        <h3 style="font-size: 1.25rem;">📦 আমার অর্ডারসমূহ</h3>
+        <p class="form-subtext">আপনার পূর্ববর্তী কেনাকাটার ইতিহাস</p>
+      </div>
+
+      <div id="ordersList" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-right: 4px;">
+        <!-- অর্ডার ইতিহাস জাভাস্ক্রিপ্ট দিয়ে বসবে -->
+      </div>
+    </div>
+  </div>
+
+  <!-- টোস্ট নোটিফিকেশন কন্টেইনার -->
+  <div id="toastContainer" class="toast-container" aria-live="assertive"></div>
+
+  <!-- স্ক্রিপ্ট লিঙ্ক -->
+  <script src="app.js"></script>
+</body>
+</html>
